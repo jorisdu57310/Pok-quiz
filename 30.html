@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PokéQuiz V8 — Pokémon × Demon Slayer</title>
+<style>
+:root{--bg:#0b1022;--panel:#151d3b;--panel2:#202a50;--text:#f7f8ff;--muted:#aeb7d3;--gold:#ffd43b;--green:#42e695;--red:#ff6475;--blue:#6ea8ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#394b9b 0,#151a39 38%,#080b17 100%);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}.app{max-width:850px;margin:auto;padding:20px 14px 40px}
+header{text-align:center;margin-bottom:16px}.logo{font-size:42px;font-weight:1000;letter-spacing:-2px}.tag{color:var(--muted);font-size:14px}
+.panel{background:rgba(21,29,59,.88);border:1px solid rgba(255,255,255,.12);border-radius:25px;padding:18px;box-shadow:0 20px 70px #0007;backdrop-filter:blur(16px)}
+h2{margin:0 0 7px;font-size:25px}.desc{color:var(--muted);line-height:1.5;margin-top:0}
+.section{margin-top:20px}.section-title{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:900;margin-bottom:9px}
+.choices{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.choices button,.start,.smallbtn{border:1px solid rgba(255,255,255,.12);background:var(--panel2);color:#fff;border-radius:12px;padding:12px 8px;font-weight:900;cursor:pointer}.choices button.active{background:#fff;color:#182044;border-color:#fff}
+.region-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.region-grid button.active{background:var(--gold);color:#191d31;border-color:var(--gold)}
+.start{width:100%;margin-top:22px;background:var(--gold);color:#171a2d;border:0;font-size:17px;padding:15px}.start:disabled{opacity:.5;cursor:wait}
+.note{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:900;margin-bottom:10px}.timer{font-variant-numeric:tabular-nums;color:var(--gold);font-size:20px}.danger{color:var(--red)!important}
+.progress{height:8px;background:#ffffff16;border-radius:99px;overflow:hidden;margin-bottom:15px}.progress div{height:100%;background:var(--gold);width:0;transition:.25s}
+.question-card{text-align:center}.qnum{color:var(--muted);font-size:13px;font-weight:900}.poke{width:100%;height:330px;object-fit:contain;filter:drop-shadow(0 20px 12px #0008)}.question{font-size:19px;font-weight:950;margin:2px 0 13px}
+.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.answer{min-height:62px;border:0;border-radius:15px;background:#fff;color:#17203b;font-size:16px;font-weight:950;cursor:pointer;box-shadow:0 5px 0 #0004}.answer:active{transform:translateY(3px);box-shadow:0 2px 0 #0004}.answer.correct{background:var(--green);color:#073c25}.answer.wrong{background:var(--red);color:#4b0710}.answer:disabled{cursor:default}
+.freebox{display:none;gap:9px}.freebox input{flex:1;min-width:0;border:0;border-radius:14px;padding:15px;font-size:17px;font-weight:800;outline:0}.freebox button{border:0;border-radius:14px;padding:0 18px;background:var(--gold);font-weight:950;color:#171a2d}.feedback{min-height:28px;margin:13px 0 5px;font-weight:950}.next{display:none;width:100%;border:0;border-radius:14px;padding:14px;background:#fff;color:#171c35;font-weight:950;font-size:16px;cursor:pointer}.next.show{display:block}
+.result{text-align:center}.scorebig{font-size:64px;font-weight:1000;color:var(--gold)}.rank{font-size:20px;font-weight:950}.statsgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:20px 0}.stat{background:var(--panel2);border-radius:15px;padding:13px}.stat b{display:block;font-size:22px}.stat span{color:var(--muted);font-size:12px}.regionstats{margin:15px 0}.row{display:grid;grid-template-columns:85px 1fr 45px;gap:8px;align-items:center;margin:9px 0;font-size:13px;font-weight:800}.track{height:8px;background:#ffffff14;border-radius:99px;overflow:hidden}.track i{display:block;height:100%;background:var(--blue)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}.smallbtn{font-size:15px}.hidden{display:none!important}
+.fusion-stage{position:relative;width:min(520px,100%);height:330px;margin:4px auto 12px;overflow:hidden;border-radius:22px;background:radial-gradient(circle,#2b376d,#0b1022 72%);border:1px solid #ffffff18;box-shadow:0 12px 35px #0005}
+.fusion-stage::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#6ea8ff22,#ffffff08,#ff647522);z-index:0}
+.fusion-stage img{position:absolute;top:50%;width:72%;height:92%;object-fit:contain;transform:translateY(-50%);filter:drop-shadow(0 12px 18px #0008);transition:.25s}
+.fusion-poke{left:-5%;clip-path:inset(0 28% 0 0)}
+.fusion-ds{right:-5%;clip-path:inset(0 0 0 28%);mix-blend-mode:screen}
+.fusion-divider{position:absolute;left:50%;top:6%;bottom:6%;width:3px;transform:translateX(-50%);background:linear-gradient(180deg,transparent,#ffd43b,#fff,#ffd43b,transparent);box-shadow:0 0 18px #ffd43b99;z-index:3}
+.fusion-badge{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:4;padding:6px 14px;border-radius:999px;background:#0b1022dd;border:1px solid #ffd43b66;font-weight:950;color:#ffd43b;font-size:12px;letter-spacing:.08em}
+.fusion-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.fusion-input-box{display:flex;flex-direction:column;gap:6px}
+.fusion-input-box label{font-size:12px;font-weight:900;color:var(--muted)}
+.fusion-input-box input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid #ffffff18;background:#0b1022;color:var(--text);font-size:16px;outline:none}
+.fusion-input-box input:focus{border-color:var(--gold);box-shadow:0 0 0 3px #ffd43b18}
+@media(max-width:560px){.fusion-stage{height:270px}.fusion-inputs{grid-template-columns:1fr}.fusion-input-box input{font-size:15px}}
+
+@media(max-width:560px){.app{padding:13px 10px}.logo{font-size:34px}.panel{padding:14px;border-radius:20px}.choices{grid-template-columns:1fr 1fr}.region-grid{grid-template-columns:1fr 1fr}.poke{height:260px}.answer{font-size:14px;min-height:58px}.scorebig{font-size:54px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="logo">⚡ POKÉQUIZ V8</div><div class="tag">Le Pokédex et les pourfendeurs n’attendent que toi.</div></header>
+<div class="panel">
+<section id="setup">
+<h2>Configure ta partie</h2>
+<p class="desc">Choisis ton mode de jeu, puis le nombre de questions et le chrono. Les questions sont mélangées aléatoirement à chaque partie.</p>
+
+<div class="section"><div class="section-title">Mode de jeu</div><div class="choices" id="gameModeChoices">
+<button class="active" data-game-mode="classic">🎯 Pokémon classique</button><button data-game-mode="fusion">🧬 Pokémon × Demon Slayer</button>
+</div><div class="note" id="gameModeNote">Quiz classique : retrouve le Pokémon affiché.</div></div>
+
+<div id="classicSettings">
+<div class="section"><div class="section-title">Région</div><div class="region-grid" id="regionChoices">
+<button class="active" data-region="1">Kanto</button><button data-region="2">Johto</button><button data-region="3">Hoenn</button><button data-region="4">Sinnoh</button><button data-region="all">Toutes</button>
+</div></div>
+
+<div class="section"><div class="section-title">Mode de réponse</div><div class="choices" id="modeChoices">
+<button class="active" data-mode="4">4 choix</button><button data-mode="2">2 choix</button><button data-mode="free">Réponse libre</button><button data-mode="4" data-note="hard">4 choix 🔥</button>
+</div><div class="note">Le dernier bouton active le mode difficile : les propositions sont choisies parmi des Pokémon proches dans le Pokédex.<br>En réponse libre, les majuscules, accents et petites fautes de frappe (jusqu’à 2 lettres) sont tolérés.</div></div>
+<div class="section"><div class="section-title">Affichage des Pokémon</div><div class="choices" id="visualChoices">
+<button class="active" data-visual="color">🌈 Couleur</button><button data-visual="shadow">👤 Ombre</button>
+</div><div class="note">En mode Ombre, le Pokémon apparaît uniquement sous forme de silhouette noire.</div></div>
+</div>
+
+<div class="section"><div class="section-title">Nombre de questions</div><div class="choices" id="countChoices">
+<button class="active" data-count="10">10</button><button data-count="25">25</button><button data-count="50">50</button><button data-count="all">Tous</button>
+</div></div>
+
+<div class="section"><div class="section-title">Chrono par question</div><div class="choices" id="timerChoices">
+<button class="active" data-time="15">15 s</button><button data-time="30">30 s</button><button data-time="60">60 s</button><button data-time="0">Sans chrono</button>
+</div></div>
+
+<button class="start" id="start">🚀 Lancer la partie</button>
+<div class="note">Les illustrations sont chargées depuis PokéAPI : une connexion Internet est nécessaire.</div>
+</section>
+
+<section id="game" class="hidden">
+<div class="topbar"><span id="progress">Question 1/10</span><span class="timer" id="timer">15</span><span id="liveScore">⭐ 0</span></div>
+<div class="progress"><div id="bar"></div></div>
+<div class="question-card">
+<div class="qnum" id="qnum">#001</div>
+<div id="classicVisual"><img id="poke" class="poke" alt="Pokémon"></div>
+<div id="fusionVisual" class="fusion-stage hidden">
+<img id="fusionPoke" class="fusion-poke" alt="Pokémon fusionné">
+<img id="fusionDs" class="fusion-ds" alt="Demon Slayer">
+<div class="fusion-divider"></div><div class="fusion-badge">POKÉMON × DEMON SLAYER</div>
+</div>
+<div class="question" id="questionText">Quel est le nom de ce Pokémon ?</div>
+<div class="answer-grid" id="answers"></div>
+<div class="freebox" id="freebox"><input id="freeInput" autocomplete="off" placeholder="Écris le nom du Pokémon…"><button id="freeSubmit">Valider</button></div>
+<div id="fusionInputs" class="fusion-inputs hidden">
+<div class="fusion-input-box"><label>⚡ Pokémon</label><input id="fusionPokemonInput" autocomplete="off" placeholder="Nom du Pokémon…"></div>
+<div class="fusion-input-box"><label>⚔️ Personnage Demon Slayer</label><input id="fusionDsInput" autocomplete="off" placeholder="Nom du personnage…"></div>
+</div>
+<button class="start hidden" id="fusionSubmit">Valider la fusion</button>
+<div class="feedback" id="feedback"></div>
+<button class="next" id="next">Question suivante →</button>
+</div>
+</section>
+
+<section id="results" class="result hidden">
+<h2>🏆 Partie terminée</h2><div class="scorebig" id="finalScore">0%</div><div class="rank" id="rank"></div>
+<div class="statsgrid">
+<div class="stat"><b id="correct">0</b><span>Bonnes réponses</span></div><div class="stat"><b id="wrong">0</b><span>Erreurs</span></div>
+<div class="stat"><b id="accuracy">0%</b><span>Précision</span></div><div class="stat"><b id="avgTime">0 s</b><span>Temps moyen</span></div>
+<div class="stat"><b id="streak">0</b><span>Meilleure série</span></div><div class="stat"><b id="timeout">0</b><span>Temps dépassé</span></div>
+</div>
+<div class="section-title" id="regionStatsTitle">Performance par région</div><div class="regionstats" id="regionStats"></div>
+<div class="actions"><button class="smallbtn" id="again">🔄 Rejouer</button><button class="smallbtn" id="change">⚙️ Modifier les réglages</button></div>
+</section>
+</div></div>
+
+<script>
+const RANGES={1:[1,151],2:[152,251],3:[252,386],4:[387,493]};
+const fusionPool=[
+ {id:25,ds:"Tanjiro Kamado",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-tanjiro.png"},
+ {id:6,ds:"Kyojuro Rengoku",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-rengoku.png"},
+ {id:133,ds:"Shinobu Kocho",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-shinobu.png"},
+ {id:448,ds:"Giyu Tomioka",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-giyu.png"},
+ {id:571,ds:"Inosuke Hashibira",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-inosuke.png"},
+ {id:135,ds:"Zenitsu Agatsuma",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-zenitsu.png"},
+ {id:59,ds:"Tengen Uzui",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-tengen.png"},
+ {id:197,ds:"Akaza",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-akaza.png"},
+ {id:658,ds:"Sabito",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-sabito.png"},
+ {id:282,ds:"Nezuko Kamado",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-nezuko.png"},
+ {id:359,ds:"Shinobu Kocho",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-shinobu.png"},
+ {id:151,ds:"Akaza",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-akaza.png"},
+ {id:248,ds:"Gyutaro",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-gyutaro.jpg"},
+ {id:149,ds:"Tanjiro Kamado",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-tanjiro.png"},
+ {id:94,ds:"Akaza",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-akaza.png"},
+ {id:38,ds:"Makomo",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-makomo.png"},
+ {id:130,ds:"Giyu Tomioka",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-giyu.png"},
+ {id:257,ds:"Rengoku",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-rengoku.png"},
+ {id:58,ds:"Inosuke Hashibira",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-inosuke.png"},
+ {id:497,ds:"Tengen Uzui",dsImg:"https://demonslayer-hinokami.sega.com/img/characters/tmb-tengen.png"}
+];
+let all=[],pool=[],questions=[],idx=0,score=0,streak=0,bestStreak=0,totalTime=0,timerId=null,timeLeft=0,answered=false,lastAnswerCorrect=false,mode="4",hard=false,count=10,timeLimit=15,region="1",questionStarted=0,regionStats={},visualMode="color",gameMode="classic";
+
+const $=x=>document.getElementById(x);
+const norm=s=>s.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+function editDistance(a,b){
+  const prev=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){
+    let cur=[i];
+    for(let j=1;j<=b.length;j++){
+      cur[j]=Math.min(
+        cur[j-1]+1,
+        prev[j]+1,
+        prev[j-1]+(a[i-1]===b[j-1]?0:1)
+      );
+    }
+    for(let j=0;j<=b.length;j++) prev[j]=cur[j];
+  }
+  return prev[b.length];
+}
+function isAcceptedAnswer(value,correct){
+  const a=norm(value), b=norm(correct);
+  if(!a || !b) return false;
+  if(a===b) return true;
+  // Tolérance de 1 lettre pour les petits noms, 2 lettres pour les noms plus longs.
+  // Cela couvre notamment les petites fautes de frappe sans exiger l'orthographe exacte.
+  const tolerance=b.length>=6?2:1;
+  return editDistance(a,b)<=tolerance;
+}
+
+
+async function loadData(){
+  $("start").disabled=true;$("start").textContent="⏳ Chargement du Pokédex…";
+  try{
+    const ids=Array.from({length:493},(_,i)=>i+1);
+    const chunks=[];
+    for(let i=0;i<ids.length;i+=30){
+      chunks.push(Promise.all(ids.slice(i,i+30).map(async id=>{
+        const r=await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+        const d=await r.json();
+        const fr=d.names.find(n=>n.language.name==="fr");
+        const en=d.names.find(n=>n.language.name==="en");
+        return {id,name:fr?.name||en?.name||d.name};
+      })));
+    }
+    for(const c of chunks) all.push(...await c);
+    $("start").disabled=false;$("start").textContent="🚀 Lancer la partie";
+  }catch(e){$("start").textContent="❌ Impossible de charger le Pokédex";console.error(e)}
+}
+function bindChoices(id,cb){document.querySelectorAll("#"+id+" button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#"+id+" button").forEach(x=>x.classList.remove("active"));b.classList.add("active");cb(b)})}
+bindChoices("gameModeChoices",b=>{
+ gameMode=b.dataset.gameMode;
+ $("classicSettings").classList.toggle("hidden",gameMode==="fusion");
+ $("gameModeNote").textContent=gameMode==="fusion"
+  ?"Fusion visuelle : retrouve le Pokémon ET le personnage de Demon Slayer cachés dans chaque fusion."
+  :"Quiz classique : retrouve le Pokémon affiché.";
+});
+bindChoices("regionChoices",b=>region=b.dataset.region);
+bindChoices("modeChoices",b=>{mode=b.dataset.mode;hard=b.dataset.note==="hard";document.querySelector("#modeChoices button[data-mode='4']").classList.toggle("active",!hard&&mode==="4")});
+bindChoices("countChoices",b=>count=b.dataset.count==="all"?"all":+b.dataset.count);
+bindChoices("timerChoices",b=>timeLimit=+b.dataset.time);
+bindChoices("visualChoices",b=>visualMode=b.dataset.visual);
+
+$("start").onclick=()=>startGame();
+$("again").onclick=()=>startGame();
+$("change").onclick=()=>{$("results").classList.add("hidden");$("setup").classList.remove("hidden")};
+$("next").onclick=nextQuestion;
+$("freeSubmit").onclick=submitFree;
+$("fusionSubmit").onclick=submitFusion;
+$("freeInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    if(answered && lastAnswerCorrect){e.preventDefault();nextQuestion();}
+    else if(!answered){e.preventDefault();submitFree();}
+  }
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && gameMode==="fusion"){
+    if(answered && lastAnswerCorrect){e.preventDefault();nextQuestion();}
+    else if(!answered && (document.activeElement===$("fusionPokemonInput")||document.activeElement===$("fusionDsInput"))){
+      e.preventDefault();submitFusion();
+    }
+    return;
+  }
+  if(e.key==="Enter" && answered && lastAnswerCorrect && mode!=="free"){
+    e.preventDefault();nextQuestion();
+  }
+});
+
+function getPool(){
+ const [a,b]=region==="all"?[1,493]:RANGES[region];
+ return all.filter(p=>p.id>=a&&p.id<=b);
+}
+function shuffle(arr){
+ const a=[...arr];
+ for(let i=a.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [a[i],a[j]]=[a[j],a[i]];
+ }
+ return a;
+}
+function startGame(){
+ clearInterval(timerId);
+ let n=count==="all"?10:Math.min(+count,20);
+ if(gameMode==="fusion"){
+   questions=shuffle(fusionPool).slice(0,n);
+ }else{
+   pool=getPool();n=count==="all"?pool.length:Math.min(count,pool.length);
+   questions=shuffle(pool).slice(0,n);
+ }
+ idx=0;score=0;streak=0;bestStreak=0;totalTime=0;regionStats={};window.__timeouts=0;
+ if(gameMode==="classic"){
+   questions.forEach(q=>{const g=q.id<=151?1:q.id<=251?2:q.id<=386?3:4;regionStats[g]??={total:0,correct:0};regionStats[g].total++});
+ }
+ $("setup").classList.add("hidden");$("results").classList.add("hidden");$("game").classList.remove("hidden");render();
+}
+function render(){
+ const p=questions[idx];answered=false;lastAnswerCorrect=false;questionStarted=Date.now();
+ $("progress").textContent=`Question ${idx+1}/${questions.length}`;$("liveScore").textContent=`⭐ ${score}`;
+ $("bar").style.width=`${idx/questions.length*100}%`;
+ $("qnum").textContent=gameMode==="fusion"?`Fusion ${idx+1}`:"#"+String(p.id).padStart(3,"0");
+ $("feedback").textContent="";$("next").classList.remove("show");
+ const ag=$("answers"),fb=$("freebox");
+ ag.innerHTML="";fb.style.display="none";ag.style.display="none";
+ $("fusionInputs").classList.add("hidden");$("fusionSubmit").classList.add("hidden");
+ $("fusionPokemonInput").value="";$("fusionDsInput").value="";
+ if(gameMode==="fusion"){
+   $("classicVisual").classList.add("hidden");$("fusionVisual").classList.remove("hidden");
+   $("fusionPoke").src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`;
+   $("fusionDs").src=p.dsImg;
+   $("questionText").textContent="Quels sont les 2 personnages qui composent cette fusion ?";
+   $("fusionInputs").classList.remove("hidden");$("fusionSubmit").classList.remove("hidden");
+   setTimeout(()=>$("fusionPokemonInput").focus(),0);
+ }else{
+   $("classicVisual").classList.remove("hidden");$("fusionVisual").classList.add("hidden");
+   $("questionText").textContent="Quel est le nom de ce Pokémon ?";
+   $("poke").src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`;
+   $("poke").style.filter=visualMode==="shadow"?"brightness(0)":"none";
+   if(mode!=="free"){
+     let wrongs;
+     if(hard){
+       wrongs=pool.filter(x=>x.id!==p.id).sort((a,b)=>Math.abs(a.id-p.id)-Math.abs(b.id-p.id)).slice(0,Math.min(+mode-1,pool.length-1));
+       wrongs=shuffle(wrongs);
+     }else wrongs=shuffle(pool.filter(x=>x.id!==p.id)).slice(0,+mode-1);
+     shuffle([p,...wrongs]).forEach(c=>{const b=document.createElement("button");b.className="answer";b.textContent=c.name;b.onclick=()=>answer(c,b,p);ag.appendChild(b)});
+     ag.style.display="grid";
+   }else{
+     fb.style.display="flex";
+     setTimeout(()=>$("freeInput").focus(),0);
+   }
+ }
+ startTimer();
+}
+function startTimer(){
+ clearInterval(timerId);if(!timeLimit){$("timer").textContent="∞";$("timer").classList.remove("danger");return}
+ timeLeft=timeLimit;$("timer").textContent=timeLeft;$("timer").classList.remove("danger");
+ timerId=setInterval(()=>{timeLeft--;$("timer").textContent=timeLeft;if(timeLeft<=5)$("timer").classList.add("danger");if(timeLeft<=0){clearInterval(timerId);timeout()}},1000);
+}
+function elapsed(){return (Date.now()-questionStarted)/1000}
+function answer(c,b,p){
+ if(answered)return;answered=true;clearInterval(timerId);const t=elapsed();totalTime+=t;
+ document.querySelectorAll(".answer").forEach(x=>x.disabled=true);
+ const g=p.id<=151?1:p.id<=251?2:p.id<=386?3:4;
+ if(c.id===p.id){lastAnswerCorrect=true;score++;streak++;bestStreak=Math.max(bestStreak,streak);regionStats[g].correct++;b.classList.add("correct");$("feedback").textContent="✅ Bonne réponse !"}
+ else{streak=0;b.classList.add("wrong");const good=[...document.querySelectorAll(".answer")].find(x=>norm(x.textContent)===norm(p.name));if(good)good.classList.add("correct");$("feedback").textContent=`❌ Raté — ${p.name}`}
+ finishAnswer();
+}
+function submitFree(){
+ if(answered)return;const p=questions[idx],value=$("freeInput").value.trim();answered=true;clearInterval(timerId);const t=elapsed();totalTime+=t;
+ const g=p.id<=151?1:p.id<=251?2:p.id<=386?3:4;
+ if(isAcceptedAnswer(value,p.name)){lastAnswerCorrect=true;score++;streak++;bestStreak=Math.max(bestStreak,streak);regionStats[g].correct++;$("feedback").textContent="✅ Bonne réponse !"}else{streak=0;$("feedback").textContent=value?`❌ Raté — ${p.name}`:"⏱️ Pas de réponse — "+p.name}
+ finishAnswer();
+}
+function acceptedDs(value,correct){
+ const aliases={
+  "Kyojuro Rengoku":["rengoku","kyojuro rengoku"],
+  "Rengoku":["rengoku","kyojuro rengoku"],
+  "Nezuko Kamado":["nezuko"],
+  "Tanjiro Kamado":["tanjiro"],
+  "Zenitsu Agatsuma":["zenitsu"],
+  "Inosuke Hashibira":["inosuke"],
+  "Shinobu Kocho":["shinobu"],
+  "Giyu Tomioka":["giyu","giyu tomioka"],
+  "Tengen Uzui":["tengen","tengen uzui"],
+  "Akaza":["akaza"],
+  "Sabito":["sabito"],
+  "Gyutaro":["gyutaro"],
+  "Makomo":["makomo"]
+ };
+ const a=norm(value);
+ if(aliases[correct]) return aliases[correct].some(x=>editDistance(a,norm(x))<=2);
+ return editDistance(a,norm(correct))<=2;
+}
+function submitFusion(){
+ if(answered)return;
+ const p=questions[idx],pv=$("fusionPokemonInput").value.trim(),dv=$("fusionDsInput").value.trim();
+ answered=true;clearInterval(timerId);totalTime+=elapsed();
+ const pokemon=all.find(x=>x.id===p.id);
+ const okP=isAcceptedAnswer(pv,pokemon?.name||"");
+ const okD=acceptedDs(dv,p.ds);
+ if(okP&&okD){
+   lastAnswerCorrect=true;score++;streak++;bestStreak=Math.max(bestStreak,streak);
+   $("feedback").textContent=`✅ Parfait ! ${pokemon.name} × ${p.ds}`;
+ }else{
+   streak=0;
+   $("feedback").textContent=`❌ Raté — ${pokemon.name} × ${p.ds}`;
+ }
+ finishAnswer();
+}
+function timeout(){
+ if(answered)return;window.__timeouts=(window.__timeouts||0)+1;answered=true;streak=0;const p=questions[idx],g=p.id<=151?1:p.id<=251?2:p.id<=386?3:4;$("feedback").textContent=`⏱️ Temps écoulé — ${p.name}`;totalTime+=timeLimit;finishAnswer();
+}
+function finishAnswer(){$("liveScore").textContent=`⭐ ${score}`;$("bar").style.width=`${(idx+1)/questions.length*100}%`;$("next").textContent=idx===questions.length-1?"Voir mes statistiques 🏆":"Question suivante →";$("next").classList.add("show")}
+function nextQuestion(){if(idx<questions.length-1){idx++;render()}else finishGame()}
+function finishGame(){
+ clearInterval(timerId);$("game").classList.add("hidden");$("results").classList.remove("hidden");
+ const acc=Math.round(score/questions.length*100);$("finalScore").textContent=acc+"%";$("correct").textContent=score;$("wrong").textContent=questions.length-score;$("accuracy").textContent=acc+"%";$("avgTime").textContent=(totalTime/questions.length).toFixed(1)+" s";$("streak").textContent=bestStreak;
+ const timeouts=questions.filter((q,i)=>false).length; // timeout is displayed via session counter below
+ $("timeout").textContent=window.__timeouts||0;
+ $("rank").textContent=acc===100?"👑 Maître Pokémon absolu":acc>=90?"🔥 Champion de Ligue":acc>=75?"⚡ Excellent dresseur":acc>=50?"💪 Dresseur confirmé":"📚 Il reste quelques Pokédex à réviser";
+ const names={1:"Kanto",2:"Johto",3:"Hoenn",4:"Sinnoh"};$("regionStats").innerHTML="";
+ $("regionStatsTitle").textContent=gameMode==="fusion"?"Mode joué":"Performance par région";
+ if(gameMode==="fusion"){
+   const row=document.createElement("div");row.className="row";row.style.gridTemplateColumns="1fr 1fr 45px";
+   row.innerHTML=`<span>Pokémon × Demon Slayer</span><div class="track"><i style="width:${acc}%"></i></div><span>${acc}%</span>`;
+   $("regionStats").appendChild(row);
+ }else{
+   [1,2,3,4].filter(g=>regionStats[g]).forEach(g=>{const s=regionStats[g],a=Math.round(s.correct/s.total*100);const row=document.createElement("div");row.className="row";row.innerHTML=`<span>${names[g]}</span><div class="track"><i style="width:${a}%"></i></div><span>${a}%</span>`;$("regionStats").appendChild(row)});
+ }
+}
+window.__timeouts=0;
+const oldTimeout=timeout;
+timeout=function(){window.__timeouts++;oldTimeout()};
+
+loadData();
+</script>
+</body>
+</html>
