@@ -159,17 +159,17 @@ function getPool(){
  const [a,b]=region==="all"?[1,493]:RANGES[region];
  return all.filter(p=>p.id>=a&&p.id<=b);
 }
+function shuffle(arr){
+ const a=[...arr];
+ for(let i=a.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [a[i],a[j]]=[a[j],a[i]];
+ }
+ return a;
+}
 function startGame(){
  clearInterval(timerId);pool=getPool();let n=count==="all"?pool.length:Math.min(count,pool.length);
- function shuffle(arr){
-  const a=[...arr];
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-questions=shuffle(pool).slice(0,n);
+ questions=shuffle(pool).slice(0,n);
  idx=0;score=0;streak=0;bestStreak=0;totalTime=0;regionStats={};window.__timeouts=0;
  questions.forEach(q=>{const g=q.id<=151?1:q.id<=251?2:q.id<=386?3:4;regionStats[g]??={total:0,correct:0};regionStats[g].total++});
  $("setup").classList.add("hidden");$("results").classList.add("hidden");$("game").classList.remove("hidden");render();
@@ -181,7 +181,7 @@ function render(){
  $("poke").src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`;
  $("poke").style.filter=visualMode==="shadow"?"brightness(0)":"none";
  $("feedback").textContent="";$("next").classList.remove("show");$("freeInput").value="";
- const ag=$("answers"),fb=$("freebox");ag.innerHTML="";fb.style.display=mode==="free"?"flex":"none";ag.style.display=mode==="free"?"none":"grid";
+ const ag=$("answers"),fb=$("freebox");ag.innerHTML="";fb.style.display=mode==="free"?"flex":"none";ag.style.display=mode==="free"?"none":"grid";ag.classList.toggle("answer-grid",mode!=="free");
  if(mode!=="free"){
    let wrongs;
    if(hard){
@@ -214,7 +214,7 @@ function submitFree(){
  finishAnswer();
 }
 function timeout(){
- if(answered)return;answered=true;streak=0;const p=questions[idx],g=p.id<=151?1:p.id<=251?2:p.id<=386?3:4;$("feedback").textContent=`⏱️ Temps écoulé — ${p.name}`;totalTime+=timeLimit;finishAnswer();
+ if(answered)return;window.__timeouts=(window.__timeouts||0)+1;answered=true;streak=0;const p=questions[idx],g=p.id<=151?1:p.id<=251?2:p.id<=386?3:4;$("feedback").textContent=`⏱️ Temps écoulé — ${p.name}`;totalTime+=timeLimit;finishAnswer();
 }
 function finishAnswer(){$("liveScore").textContent=`⭐ ${score}`;$("bar").style.width=`${(idx+1)/questions.length*100}%`;$("next").textContent=idx===questions.length-1?"Voir mes statistiques 🏆":"Question suivante →";$("next").classList.add("show")}
 function nextQuestion(){if(idx<questions.length-1){idx++;render()}else finishGame()}
